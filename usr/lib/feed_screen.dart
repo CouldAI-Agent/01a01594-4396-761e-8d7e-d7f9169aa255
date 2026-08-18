@@ -9,28 +9,41 @@ class FeedScreen extends StatefulWidget {
 }
 
 class _FeedScreenState extends State<FeedScreen> {
-  final List<String> videoUrls = [
+  final List<String> _videoUrls = [
     'https://flutter.github.io/assets-for-api-docs/assets/videos/butterfly.mp4',
     'https://flutter.github.io/assets-for-api-docs/assets/videos/bee.mp4',
   ];
 
+  late PageController _pageController;
+
+  @override
+  void initState() {
+    super.initState();
+    _pageController = PageController();
+  }
+
+  @override
+  void dispose() {
+    _pageController.dispose();
+    super.dispose();
+  }
+
   @override
   Widget build(BuildContext context) {
-    return Scaffold(
-      backgroundColor: Colors.black,
-      body: PageView.builder(
-        scrollDirection: Axis.vertical,
-        itemCount: videoUrls.length,
-        itemBuilder: (context, index) {
-          return VideoPlayerItem(videoUrl: videoUrls[index]);
-        },
-      ),
+    return PageView.builder(
+      controller: _pageController,
+      scrollDirection: Axis.vertical,
+      itemCount: _videoUrls.length,
+      itemBuilder: (context, index) {
+        return VideoPlayerItem(videoUrl: _videoUrls[index]);
+      },
     );
   }
 }
 
 class VideoPlayerItem extends StatefulWidget {
   final String videoUrl;
+
   const VideoPlayerItem({super.key, required this.videoUrl});
 
   @override
@@ -38,58 +51,57 @@ class VideoPlayerItem extends StatefulWidget {
 }
 
 class _VideoPlayerItemState extends State<VideoPlayerItem> {
-  late VideoPlayerController _controller;
+  late VideoPlayerController _videoPlayerController;
   bool _isDownloading = false;
 
   @override
   void initState() {
     super.initState();
-    _controller = VideoPlayerController.networkUrl(Uri.parse(widget.videoUrl))
+    _videoPlayerController = VideoPlayerController.networkUrl(Uri.parse(widget.videoUrl))
       ..initialize().then((_) {
         setState(() {});
-        _controller.play();
-        _controller.setLooping(true);
+        _videoPlayerController.play();
+        _videoPlayerController.setLooping(true);
       });
   }
 
   @override
   void dispose() {
-    _controller.dispose();
+    _videoPlayerController.dispose();
     super.dispose();
   }
 
-  void _downloadVideo() {
+  void _handleDownload() async {
     setState(() {
       _isDownloading = true;
     });
-    ScaffoldMessenger.of(context).showSnackBar(
-      const SnackBar(content: Text('Downloading video...')),
-    );
-    Future.delayed(const Duration(seconds: 2), () {
-      if (mounted) {
-        setState(() {
-          _isDownloading = false;
-        });
-        ScaffoldMessenger.of(context).showSnackBar(
-          const SnackBar(content: Text('Download complete!')),
-        );
-      }
-    });
+    
+    // Simulate download delay
+    await Future.delayed(const Duration(seconds: 2));
+    
+    if (mounted) {
+      setState(() {
+        _isDownloading = false;
+      });
+      ScaffoldMessenger.of(context).showSnackBar(
+        const SnackBar(content: Text('Video Downloaded Successfully!')),
+      );
+    }
   }
 
   @override
   Widget build(BuildContext context) {
     return Stack(
+      fit: StackFit.expand,
       children: [
-        if (_controller.value.isInitialized)
-          Center(
-            child: AspectRatio(
-              aspectRatio: _controller.value.aspectRatio,
-              child: VideoPlayer(_controller),
-            ),
-          )
-        else
-          const Center(child: CircularProgressIndicator(color: Colors.white)),
+        _videoPlayerController.value.isInitialized
+            ? AspectRatio(
+                aspectRatio: _videoPlayerController.value.aspectRatio,
+                child: VideoPlayer(_videoPlayerController),
+              )
+            : const Center(child: CircularProgressIndicator()),
+        
+        // Right Side Icons
         Positioned(
           right: 16,
           bottom: 100,
@@ -97,21 +109,27 @@ class _VideoPlayerItemState extends State<VideoPlayerItem> {
             mainAxisSize: MainAxisSize.min,
             children: [
               IconButton(
-                icon: const Icon(Icons.favorite, color: Colors.white, size: 40),
+                icon: const Icon(Icons.favorite, color: Colors.white, size: 36),
                 onPressed: () {},
               ),
               const SizedBox(height: 16),
               IconButton(
-                icon: const Icon(Icons.chat_bubble, color: Colors.white, size: 40),
+                icon: const Icon(Icons.comment, color: Colors.white, size: 36),
                 onPressed: () {},
               ),
               const SizedBox(height: 16),
               IconButton(
-                icon: _isDownloading
-                    ? const CircularProgressIndicator(color: Colors.white)
-                    : const Icon(Icons.download, color: Colors.white, size: 40),
-                onPressed: _downloadVideo,
+                icon: const Icon(Icons.share, color: Colors.white, size: 36),
+                onPressed: () {},
               ),
+              const SizedBox(height: 16),
+              if (_isDownloading)
+                const CircularProgressIndicator(color: Colors.white)
+              else
+                IconButton(
+                  icon: const Icon(Icons.download, color: Colors.white, size: 36),
+                  onPressed: _handleDownload,
+                ),
             ],
           ),
         ),
