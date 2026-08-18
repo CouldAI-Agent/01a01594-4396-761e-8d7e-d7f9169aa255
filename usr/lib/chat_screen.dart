@@ -9,17 +9,25 @@ class ChatScreen extends StatelessWidget {
       appBar: AppBar(
         title: const Text('Inbox'),
         backgroundColor: Colors.black,
+        elevation: 0,
       ),
+      backgroundColor: Colors.black,
       body: ListView.builder(
-        itemCount: 10,
+        itemCount: 15,
         itemBuilder: (context, index) {
           return ListTile(
             leading: CircleAvatar(
               backgroundColor: Colors.grey.shade800,
               child: const Icon(Icons.person, color: Colors.white),
             ),
-            title: Text('User $index', style: const TextStyle(color: Colors.white)),
-            subtitle: Text('Message snippet $index...', style: TextStyle(color: Colors.grey.shade400)),
+            title: Text(
+              'User ${index + 1}',
+              style: const TextStyle(color: Colors.white, fontWeight: FontWeight.bold),
+            ),
+            subtitle: const Text(
+              'Tap to chat...',
+              style: TextStyle(color: Colors.grey),
+            ),
             trailing: const Icon(Icons.camera_alt_outlined, color: Colors.grey),
             onTap: () {
               // Open chat detail
